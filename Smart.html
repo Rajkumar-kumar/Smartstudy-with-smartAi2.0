@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartStudy - AI & Courses</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- GLOBAL STYLES --- */
+        :root { --primary: #6366f1; --paper: #fdfbf7; --text: #1e293b; --admin-bg: #0f172a; }
+        body { margin: 0; font-family: 'Poppins', sans-serif; background-color: #f1f5f9; height: 100vh; overflow: hidden; }
+        .screen { display: none; height: 100%; width: 100%; position: absolute; top: 0; left: 0; flex-direction: column; }
+        .active { display: flex; }
+        .hidden { display: none !important; }
+
+        /* --- LOGIN SCREEN --- */
+        #loginScreen { justify-content: center; align-items: center; background: white; }
+        .login-box { padding: 30px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 85%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; outline:none; }
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        
+        /* --- STUDENT APP (Textbook UI) --- */
+        #studentApp { background: var(--paper); font-family: 'Merriweather', serif; color: var(--text); }
+        .app-header { padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: white; font-family: 'Poppins', sans-serif; }
+        .content-area { flex: 1; padding: 20px; overflow-y: auto; }
+
+        /* AI Section */
+        .ai-card { background: white; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0; text-align: center; margin-bottom: 30px; font-family: 'Poppins', sans-serif; }
+        .upload-zone { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px; margin-top: 10px; cursor: pointer; background: #f8fafc; }
+        
+        /* Courses Grid */
+        .course-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .course-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; transition: 0.2s; }
+        .course-card:active { transform: scale(0.98); }
+        .thumbnail { width: 100%; height: 140px; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+        .play-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .card-info { padding: 15px; }
+        .card-title { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; margin: 0 0 5px 0; }
+        .card-desc { font-size: 12px; color: #64748b; margin: 0; }
+
+        /* Video Modal */
+        #videoModal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .close-video { color: white; margin-bottom: 20px; background: #ef4444; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
+        
+        /* --- ADMIN PANEL --- */
+        #adminPanel { background: var(--admin-bg); color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
+        .admin-nav { padding: 15px 20px; border-bottom: 1px solid #334155; display:flex; justify-content:space-between; align-items:center; }
+        
+        .admin-box { background: #1e293b; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .admin-input { background: #334155; border: 1px solid #475569; color: white; margin-bottom: 10px; }
+        .course-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #334155; }
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen" class="screen active">
+        <div class="login-box">
+            <h2 style="color:var(--primary); margin:0;">🧠 SmartStudy</h2>
+            <p style="color:#64748b; font-size:12px;">Next-Gen Learning App</p>
+            
+            <div id="loginForm">
+                <input type="tel" id="mobileInput" placeholder="📱 Mobile Number">
+                <button class="btn" onclick="sendOtp()">Get OTP</button>
+            </div>
+            
+            <div id="otpForm" class="hidden">
+                <p>OTP Sent! (Enter 1234)</p>
+                <input type="text" id="otpInput" placeholder="Enter OTP">
+                <button class="btn" onclick="verifyOtp()">Login</button>
+            </div>
+            <p onclick="adminLogin()" style="font-size:12px; margin-top:20px; color:#94a3b8; cursor:pointer;">Admin Login</p>
+        </div>
+    </div>
+
+    <div id="studentApp" class="screen">
+        <div class="app-header">
+            <span><b>SmartStudy</b> Library</span>
+            <button onclick="logout()" style="border:none; background:none; color:var(--primary); font-weight:bold;">Logout</button>
+        </div>
+
+        <div class="content-area">
+            <div class="ai-card">
+                <h3 style="margin:0; font-size:16px;">🤖 AI Problem Solver</h3>
+                <div class="upload-zone" onclick="alert('AI Scanner Open! (Demo)')">
+                    📄 Tap to Scan PDF
+                </div>
+            </div>
+
+            <h3 style="font-family:'Poppins'; font-size:18px;">📚 My Video Courses</h3>
+            <div id="studentCourseList" class="course-grid">
+                <p style="font-size:12px; color:#64748b;">No courses available yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="videoModal">
+        <button class="close-video" onclick="closeVideo()">✖ Close Video</button>
+        <iframe id="mainPlayer" width="90%" height="250" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+
+    <div id="adminPanel" class="screen">
+        <div class="admin-nav">
+            <span>🚀 Admin Dashboard</span>
+            <button onclick="logout()" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px;">Exit</button>
+        </div>
+
+        <div style="padding:20px;">
+            <div class="admin-box">
+                <h3 style="margin-top:0;">➕ Add New Class</h3>
+                <input type="text" id="courseTitle" class="admin-input" placeholder="Topic Name (e.g. Calculus Ch-1)">
+                <input type="text" id="courseLink" class="admin-input" placeholder="Paste YouTube Link Here">
+                <button class="btn" onclick="addCourse()">Publish Class</button>
+            </div>
+
+            <div class="admin-box">
+                <h3 style="margin-top:0;">📡 Live Courses</h3>
+                <div id="adminList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA HANDLING ---
+        // Fake Database in LocalStorage
+        let courses = JSON.parse(localStorage.getItem('smartCourses')) || [
+            { id: 1, title: "Introduction to SmartAi", vid: "dQw4w9WgXcQ" } // Sample
+        ];
+
+        // --- NAVIGATION LOGIC ---
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // --- AUTH LOGIC ---
+        function sendOtp() {
+            if(document.getElementById('mobileInput').value.length > 9) {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('otpForm').classList.remove('hidden');
+            } else alert("Invalid Mobile");
+        }
+        function verifyOtp() {
+            if(document.getElementById('otpInput').value == "1234") {
+                showScreen('studentApp');
+                loadStudentCourses();
+            } else alert("Wrong OTP");
+        }
+        function adminLogin() {
+            let p = prompt("Admin Password:");
+            if(p == "admin123") {
+                showScreen('adminPanel');
+                loadAdminCourses();
+            } else alert("Access Denied");
+        }
+        function logout() {
+            location.reload();
+        }
+
+        // --- ADMIN: ADD COURSE LOGIC ---
+        function addCourse() {
+            const title = document.getElementById('courseTitle').value;
+            const url = document.getElementById('courseLink').value;
+
+            if(!title || !url) return alert("Fill details");
+
+            // Extract Video ID from YouTube URL
+            let videoId = "";
+            if (url.includes("v=")) {
+                videoId = url.split('v=')[1].split('&')[0];
+            } else if (url.includes("youtu.be/")) {
+                videoId = url.split('youtu.be/')[1];
+            } else {
+                return alert("Please enter valid YouTube Link");
+            }
+
+            courses.push({ id: Date.now(), title: title, vid: videoId });
+            localStorage.setItem('smartCourses', JSON.stringify(courses));
+            
+            document.getElementById('courseTitle').value = '';
+            document.getElementById('courseLink').value = '';
+            loadAdminCourses();
+            alert("Class Published!");
+        }
+
+        function deleteCourse(id) {
+            courses = courses.filter(c => c.id !== id);
+            localStorage.setItem('smartCourses', JSON.stringify(courses));
+            loadAdminCourses();
+        }
+
+        function loadAdminCourses() {
+            const list = document.getElementById('adminList');
+            list.innerHTML = '';
+            courses.forEach(c => {
+                list.innerHTML += `
+                    <div class="course-list-item">
+                        <span>${c.title}</span>
+                        <button onclick="deleteCourse(${c.id})" style="background:#ef4444; border:none; color:white; padding:4px 8px; border-radius:4px; font-size:10px;">Delete</button>
+                    </div>
+                `;
+            });
+        }
+
+        // --- STUDENT: VIEW COURSE LOGIC ---
+        function loadStudentCourses() {
+            const container = document.getElementById('studentCourseList');
+            container.innerHTML = '';
+            
+            if(courses.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#94a3b8;">No classes added yet.</p>';
+                return;
+            }
+
+            courses.forEach(c => {
+                // Using YouTube Thumbnail API
+                const thumb = `https://img.youtube.com/vi/${c.vid}/mqdefault.jpg`;
+                
+                container.innerHTML += `
+                    <div class="course-card" onclick="playVideo('${c.vid}')">
+                        <div class="thumbnail" style="background-image:url('${thumb}'); background-size:cover;">
+                            <div class="play-btn">▶</div>
+                        </div>
+                        <div class="card-info">
+                            <h4 class="card-title">${c.title}</h4>
+                            <p class="card-desc">Video Lecture • SmartAi Class</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- VIDEO PLAYER LOGIC ---
+        function playVideo(vidId) {
+            const modal = document.getElementById('videoModal');
+            const player = document.getElementById('mainPlayer');
+            player.src = `https://www.youtube.com/embed/${vidId}?autoplay=1`;
+            modal.style.display = 'flex';
+        }
+
+        function closeVideo() {
+            document.getElementById('videoModal').style.display = 'none';
+            document.getElementById('mainPlayer').src = ""; // Stop audio
+        }
+
+    </script>
+</body>
+</html>
